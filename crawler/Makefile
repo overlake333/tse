@@ -3,3 +3,5 @@ LIBS=-lutils -lcurl
 
 crawler:
 				gcc $(CFLAGS) crawler.c $(LIBS) -o $@
+clean:
+	rm -f crawler

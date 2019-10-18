@@ -15,7 +15,7 @@
 #include <queue.h>
 #include <hash.h>
 #include <stdbool.h>
-
+#include <sys/stat.h>
 
 int32_t pagesave(webpage_t *pagep, int id, char *dirname){
   char filename[20];
@@ -51,9 +51,33 @@ static bool compareByURL(void* elementp, const void* searchkeyp){
 
 int main(int argc, char *argv[]){
   // Create a new webpage
-	char *seedurl;
-	int maxDepth;
-	char *pagedir;
+	char *usage = "usage: crawler <seedurl> <pagedir> <maxdepth>";
+
+	if(argc != 4){
+		printf("Wrong argument #: %s\n", usage);
+		exit(EXIT_FAILURE);
+	}
+	
+	char *seedurl = argv[1];
+	char *pagedir = argv[2];
+	int maxDepth = atoi(argv[3]);
+
+	if((strcmp(seedurl, "") == 0) || (strcmp(pagedir, "") == 0) || (maxDepth < 0)){
+		printf("Arguments don't work: %s\n", usage);
+		exit(EXIT_FAILURE);
+	}
+
+	char folder[20];
+	sprintf(folder, "../%s", pagedir);
+	struct stat sb;
+
+	if(!(stat(folder, &sb) == 0 && S_ISDIR(sb.st_mode))){
+		printf("Directory Doesn't Exist!\n%s\n", usage);
+		exit(EXIT_FAILURE);
+	}
+	
+
+	
   webpage_t *page = webpage_new(seedurl, 0, NULL);
   // Grab the webpage's html
   hashtable_t *visited = hopen(20);
@@ -88,11 +112,8 @@ int main(int argc, char *argv[]){
 				free(result);
 			}
 			
-		}else{
-			// if we could not fetch webpage exit failure
-			exit(EXIT_FAILURE);
-		}
 		myPage = (webpage_t *)qget(webpages);
+		}
 	}
 
 

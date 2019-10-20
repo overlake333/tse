@@ -4,6 +4,6 @@ LIBS=-lutils -lcurl
 all: clean crawler
 
 crawler:
-	gcc $(CFLAGS) crawler.c $(LIBS) -o $@
+	gcc $(CFLAGS) crawler2.c $(LIBS) -o $@
 clean:
 	rm -f crawler

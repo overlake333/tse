@@ -29,7 +29,6 @@ bool webpage_save(webpage_t *pagep, int id, char *dirname) {
 	char filename[20];
 
 	sprintf(filename, "../%s/%i", dirname, id);
-	// printf("%s\n", webpage_getURL(pagep));
 	if ((save = fopen(filename, "w")) == NULL) {
 		return false;
 	}
@@ -40,15 +39,15 @@ bool webpage_save(webpage_t *pagep, int id, char *dirname) {
 	fprintf(save, "%d\n", webpage_getHTMLlen(pagep));
 	fprintf(save, "%s\n", webpage_getHTML(pagep));
 
+	fclose(save);
+	
   return true;
 }
 
 bool compareByURL(void* elementp, const void* searchkeyp) {
 	// this function needs to see if the url searchkeyp is the same as the url from the element
 	if (elementp != NULL && searchkeyp != NULL) {
-		webpage_t *web = (webpage_t *)elementp;
-		char *result = webpage_getURL(web);
-		if (strcmp(result, (const char*)searchkeyp) == 0) {
+		if (strcmp(webpage_getURL((webpage_t *)elementp), (const char*)searchkeyp) == 0) {
 			return true;
 		}
 	}
@@ -81,13 +80,13 @@ int main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);
 	}
 
-	char folder[20];                                                                   
-  sprintf(folder, "../%s", pagedir);                                                 
-  struct stat sb;                                                                    
-                                                                                     
-  if(!(stat(folder, &sb) == 0 && S_ISDIR(sb.st_mode))){                              
-    printf("Directory Doesn't Exist!\n%s\n", usage);                                 
-    exit(EXIT_FAILURE);                                                              
+	char folder[20];
+  sprintf(folder, "../%s", pagedir);
+  struct stat sb;
+	
+  if(!(stat(folder, &sb) == 0 && S_ISDIR(sb.st_mode))){
+    printf("Directory Doesn't Exist!\n%s\n", usage);
+    exit(EXIT_FAILURE);
   }     
 
 	// check for valid max depth
@@ -117,8 +116,10 @@ void crawler(char *seedURL, char *dirname, int maxDepth) {
 	while (current != NULL) { // while there are still pages to be crawled
 		if (webpage_fetch(current)) { // gets html of current page 			
 			if ((webpage_save(current, id, dirname)) == false) {
-				printf("error: page not saved\n");
-			}
+					printf("error: page not saved\n");
+				} else {
+					id++; // save it into the directory with a unique id 
+				}
 		} 
 		
 		if (webpage_getDepth(current) < maxDepth) {
@@ -138,9 +139,10 @@ void crawler(char *seedURL, char *dirname, int maxDepth) {
 		}
 		webpage_t *next = qget(que);
 		current = next;
-		id++;
-		// save it into the directory with a unique id
 	}
+
+	
+	webpage_delete(current);
 	qclose(que);
 	happly(htp, webpage_delete);
 	hclose(htp);

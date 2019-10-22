@@ -18,31 +18,10 @@
 #include <queue.h>
 #include <hash.h>
 #include <sys/stat.h>
+#include <pageio.h>
 
-bool webpage_save(webpage_t *pagep, int id, char *dirname);
 void crawler(char *seedURL, char*dirname, int maxDepth);
 
-bool webpage_save(webpage_t *pagep, int id, char *dirname) {
-	if (pagep == NULL || dirname == NULL || id < 0) return false;
-
-	FILE *save;
-	char filename[20];
-
-	sprintf(filename, "../%s/%i", dirname, id);
-	if ((save = fopen(filename, "w")) == NULL) {
-		return false;
-	}
-
-	// save with a unique id
-	fprintf(save, "%s\n", webpage_getURL(pagep));
-	fprintf(save, "%d\n", webpage_getDepth(pagep));
-	fprintf(save, "%d\n", webpage_getHTMLlen(pagep));
-	fprintf(save, "%s\n", webpage_getHTML(pagep));
-
-	fclose(save);
-	
-  return true;
-}
 
 bool compareByURL(void* elementp, const void* searchkeyp) {
 	// this function needs to see if the url searchkeyp is the same as the url from the element
@@ -115,7 +94,7 @@ void crawler(char *seedURL, char *dirname, int maxDepth) {
 	int id = 1;
 	while (current != NULL) { // while there are still pages to be crawled
 		if (webpage_fetch(current)) { // gets html of current page 			
-			if ((webpage_save(current, id, dirname)) == false) {
+			if ((pagesave(current, id, dirname)) == 1) {
 					printf("error: page not saved\n");
 				} else {
 					id++; // save it into the directory with a unique id 

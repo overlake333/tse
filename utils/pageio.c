@@ -90,29 +90,15 @@ webpage_t *pageload(int id, char *dirname){
 	fscanf(file, "%d", &length);
  	char *html = (char *)malloc(sizeof(char *)*length);
 	//	strncat(html, "",1);
-	char ch;
-	
-	
-	
-
-	
+	char ch;	
 	while((ch = fgetc(file)) != EOF){
 		//		strncat(html, &ch, 1);
 		sprintf(html, "%s%c", html, ch); 
 	}
-
 	RemoveWhitespace(html);
-	
 	fclose(file);
-	
-
-	
 	webpage_t *result = webpage_new(URL, depth, html);
-
-
 	return result;
-	
-	
 }
 
 

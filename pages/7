@@ -1,7 +1,6 @@
 https://thayer.github.io/engs50/Resources/CodingStyle.html
 1
-24359
-<!DOCTYPE html>
+24359<!DOCTYPE html>
 <html>
 
   <head>
@@ -387,4 +386,3 @@ program and add <code class="highlighter-rouge">-lm</code> to the command line.<
   </body>
 
 </html>
-

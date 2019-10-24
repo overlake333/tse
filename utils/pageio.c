@@ -36,10 +36,9 @@ static void RemoveWhitespace(char* str);
  */
 
 int32_t pagesave(webpage_t *pagep, int id, char *dirname) {                                          
-  if (pagep == NULL || dirname == NULL || id < 0) return false;                                       
-                                                                                                      
-  FILE *save;                                                                                         
-  char filename[20];                                                                                  
+  if (pagep == NULL || dirname == NULL || id < 0) return false;
+	FILE *save;
+	char filename[20];                                    
                                                                                                       
   sprintf(filename, "../%s/%i", dirname, id);                                                         
   if ((save = fopen(filename, "w")) == NULL) {                                                        
@@ -49,7 +48,7 @@ int32_t pagesave(webpage_t *pagep, int id, char *dirname) {
   // save with a unique id                                                                            
   fprintf(save, "%s\n", webpage_getURL(pagep));                                                       
   fprintf(save, "%d\n", webpage_getDepth(pagep));                                                     
-  fprintf(save, "%d", webpage_getHTMLlen(pagep));                                                   
+  fprintf(save, "%d\n", webpage_getHTMLlen(pagep));                                                   
   fprintf(save, "%s", webpage_getHTML(pagep));                                                      
                                                                                                       
   fclose(save);                                                                                       
@@ -64,9 +63,7 @@ int32_t pagesave(webpage_t *pagep, int id, char *dirname) {
  * returns: non-NULL for success; NULL otherwise                               
  */                                                                            
 webpage_t *pageload(int id, char *dirname){
-	// create a new webpage
-	
-	
+	// create a new webpage	
 	char filename[20];
 	sprintf(filename, "../%s/%d", dirname, id);
 	FILE *file = fopen(filename, "r");
@@ -87,15 +84,18 @@ webpage_t *pageload(int id, char *dirname){
 	// Second is depth
 	// Now we need to scan the total html
 	int length;
-	fscanf(file, "%d", &length);
+	fscanf(file, "%d\n", &length);
  	char *html = (char *)malloc(sizeof(char *)*length);
+	char *p = html;
 	//	strncat(html, "",1);
-	char ch;	
+	char ch;
+
 	while((ch = fgetc(file)) != EOF){
-		//		strncat(html, &ch, 1);
-		sprintf(html, "%s%c", html, ch); 
+		*p++ = ch;
+		//sprintf(html, "%s%c", html, ch); 
 	}
-	RemoveWhitespace(html);
+	
+	//RemoveWhitespace(html);
 	fclose(file);
 	webpage_t *result = webpage_new(URL, depth, html);
 	return result;

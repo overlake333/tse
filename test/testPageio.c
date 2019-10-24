@@ -12,7 +12,7 @@
 #include <webpage.h>
 
 int main(void){
-	webpage_t *mypage = pageload(1, "pages");
-	pagesave(mypage, 6, "newpages");
+ 	webpage_t *mypage = pageload(9, "pages");
+	pagesave(mypage, 99, "newpages");
 	//webpage_t *loadback = pageload(6, "newpages");
 }

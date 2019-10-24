@@ -17,7 +17,10 @@
 #include <inttypes.h>                                                           
 #include <unistd.h>                                                             
 #include <webpage.h>
+#include <ctype.h>
 
+// Internal Function Prototypes
+static void RemoveWhitespace(char* str);
 
 
 /*                                                                             
@@ -46,8 +49,8 @@ int32_t pagesave(webpage_t *pagep, int id, char *dirname) {
   // save with a unique id                                                                            
   fprintf(save, "%s\n", webpage_getURL(pagep));                                                       
   fprintf(save, "%d\n", webpage_getDepth(pagep));                                                     
-  fprintf(save, "%d\n", webpage_getHTMLlen(pagep));                                                   
-  fprintf(save, "%s\n", webpage_getHTML(pagep));                                                      
+  fprintf(save, "%d", webpage_getHTMLlen(pagep));                                                   
+  fprintf(save, "%s", webpage_getHTML(pagep));                                                      
                                                                                                       
   fclose(save);                                                                                       
                                                                                                       
@@ -85,21 +88,46 @@ webpage_t *pageload(int id, char *dirname){
 	// Now we need to scan the total html
 	int length;
 	fscanf(file, "%d", &length);
-	char *html = (char *)malloc(length);
-	char temp[100];
+ 	char *html = (char *)malloc(sizeof(char *)*length);
+	//	strncat(html, "",1);
+	char ch;
+	
+	
+	
 
-	// MUST USE fgetc CANT USE SCAN MUST BE UPDATED - JAMES
-	//while (fscanf(file, "%[^\n]%*c",temp)!= EOF){
-		if (temp != NULL){
-			strcat(html, temp);
-			}
+	
+	while((ch = fgetc(file)) != EOF){
+		//		strncat(html, &ch, 1);
+		sprintf(html, "%s%c", html, ch); 
 	}
 
+	RemoveWhitespace(html);
+	
 	fclose(file);
 	
+
+	
 	webpage_t *result = webpage_new(URL, depth, html);
-	// possibly need
+
+
 	return result;
+	
+	
+}
 
 
+
+
+
+/*INTERNAL FUNCTIONS*/
+
+static void RemoveWhitespace(char* str){
+	char *end;
+
+	end = str + strlen(str)-1;
+	while(end > str && isspace((unsigned char)*end)){
+		end--;
+	}
+	end[1] = '\0';
+  str = end;
 }

@@ -27,29 +27,57 @@ typedef struct hashIndex{
 	char *word;
 
 	// frequency is outdated
-	int frequency;
+	//int frequency;
 	// queue pointer of webpages that have this word
+	queue_t *pages;
+	
 	
 } hashIndex_t;
 
 
 // MAKE A STRUCT THAT HOLDS A WEBPAGE and frequency of a word asssociated with that webpage
 
+typedef struct wordPage{
+	int id; // webpage id
+	int frequency; // word frequency
+} wordPage_t;
+
 // make a queue of these types 
 
 
-static hashIndex_t *makeIndex(char *word){
+
+
+static wordPage_t *makeWordPage(int id) {
+	wordPage_t *page;
+	if (!(page = (wordPage_t *)malloc(sizeof(wordPage_t)))){
+		return NULL;
+	}
+	
+	page->id = id;
+	page->frequency = 1;
+
+	return page;
+}
+
+static hashIndex_t *makeIndex(char *word, int id){
 	hashIndex_t *Hi;
+	wordPage_t *page;
 	if (!(Hi = (hashIndex_t *)malloc(sizeof(hashIndex_t)))){
 		return NULL;
 	}
-	Hi->frequency = 1;
+	Hi->pages = qopen();
+	page = makeWordPage(id);
+	qput(Hi->pages, (void *)page);
+ 
 	Hi->word = word;
 	return Hi;
 }
+	
+
 static void deleteIndex(void *hashIndex){
 	free(hashIndex);
 }
+
 static bool searchfn(void *elementp, const void* searchkeyp){
 	hashIndex_t *Hi = (hashIndex_t *)elementp;
 	if (strcmp(Hi->word, searchkeyp) == 0){
@@ -58,11 +86,27 @@ static bool searchfn(void *elementp, const void* searchkeyp){
 	return false;
 }
 
+static bool qsearchfn(void *elementp, const void *searchkeyp) {
+	wordPage_t *myWordPage = (wordPage_t *)elementp;
+	if(strcmp((const char *)(&(myWordPage->id)), searchkeyp) == 0) {
+		return true;
+	}
+	return false;
+}
+
 static int wordCount = 0;
+
+static void addToCount2(void *ep) {
+	wordPage_t *wp = (wordPage_t *)ep;
+	wordCount = wordCount + (wp->frequency);
+}
+
 static void addToCount(void *ep){
 	hashIndex_t *hi = (hashIndex_t *)ep;
-	wordCount = wordCount + (hi->frequency);
+	qapply(hi->pages, addToCount2); 
+	//	wordCount = wordCount + (hi->frequency);
 }
+
 static int sumwords(hashtable_t *ht){
 	happly(ht, addToCount);
 	return wordCount;
@@ -73,7 +117,8 @@ static int sumwords(hashtable_t *ht){
 int main(void) {
 
 	// Loads a webpage with pageio module
-	webpage_t *page = pageload(2, "pages");
+	int id = 1;
+	webpage_t *page = pageload(id, "pages");
 	int pos = 0;
 	char *word;
 	FILE *output = fopen("output.txt", "w"); // output file to write html to
@@ -88,13 +133,24 @@ int main(void) {
 			hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, sizeof(word)));
 			if (hw == NULL){
 				// create a new hashIndex_t
-				hashIndex_t *ht = makeIndex(word);
+				hashIndex_t *ht = makeIndex(word, id);
 				// add it to hashtable
 				hput(index, ht, (const char *)word, sizeof(word));
 				
 			}else{
 				// update the frequency of the hashindex_t by 1
-				hw->frequency = hw->frequency +1;
+				//hw->frequency = hw->frequency +1;
+				wordPage_t *wp = (wordPage_t *)(qsearch(hw->pages, qsearchfn, (const char *)&id));
+				if (wp == NULL) {
+					// create new wordPage - has a id and frequency!
+					wordPage_t *newPage = makeWordPage(id);
+					// add it to queue of the word
+					qput(hw->pages, (void *)newPage);
+				} else {
+					// Update a wordPage's frequency by 1
+					wp->frequency = wp->frequency +1;
+				}
+				
 			}
 
 						

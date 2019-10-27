@@ -19,10 +19,6 @@
 #include <webpage.h>
 #include <ctype.h>
 
-// Internal Function Prototypes
-static void RemoveWhitespace(char* str);
-
-
 /*                                                                             
  * pagesave -- save the page in filename id in directory dirnm                 
  *                                                                             
@@ -101,19 +97,3 @@ webpage_t *pageload(int id, char *dirname){
 	return result;
 }
 
-
-
-
-
-/*INTERNAL FUNCTIONS*/
-
-static void RemoveWhitespace(char* str){
-	char *end;
-
-	end = str + strlen(str)-1;
-	while(end > str && isspace((unsigned char)*end)){
-		end--;
-	}
-	end[1] = '\0';
-  str = end;
-}

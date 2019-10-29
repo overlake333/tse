@@ -64,7 +64,7 @@ webpage_t *pageload(int id, char *dirname){
 	sprintf(filename, "../%s/%d", dirname, id);
 	FILE *file = fopen(filename, "r");
 	if (file == NULL){
-		printf("file is null");
+		return NULL;
 	}
 	
 	

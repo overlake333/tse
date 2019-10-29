@@ -18,12 +18,13 @@
 #include <stdbool.h>
 #include <hash.h>
 #include <queue.h>
+#include <indexio.h>
 
 /* INTERNAL FUNCTION PROTOTYPES */
-void NormalizeWord(char *word);
+//void NormalizeWord(char *word);
 
 
-typedef struct hashIndex{
+/*typedef struct hashIndex{
 	char *word;
 	
 	// frequency is outdated
@@ -73,11 +74,11 @@ static hashIndex_t *makeIndex(char *word, int id){
 	return Hi;
 }
 
-
+*/
 static void deleteIndex(void *hashIndex){
 	free(hashIndex);
 }
-
+/*
 static bool searchfn(void *elementp, const void* searchkeyp){
 	hashIndex_t *Hi = (hashIndex_t *)elementp;
 	if (strcmp(Hi->word, searchkeyp) == 0){
@@ -112,16 +113,28 @@ static int sumwords(hashtable_t *ht){
 	return wordCount;
 	
 }
-
+*/
 // Main
 int main(int argc, char *argv[]) {
 	
-	
+	char *usage = "usage: indexer <pagedir> <indexnm>";
 	// Loads a webpage with pageio module
-	int toId = atoi(argv[1]);
+	// int toId = atoi(argv[1]);
+	if (argc != 3) {
+		printf("%s\n", usage);
+		exit(EXIT_FAILURE);
+	}
+	char *pagedir = argv[1];
+	char *indexnm = argv[2];
 	hashtable_t *index = hopen(50);
 
 	
+	
+	//NEEDS TO CHECK IF DIR EXISTS
+	indexload(index, pagedir);
+	indexsave(index, indexnm);
+	
+	/*
 	for (int id = 1; id <= toId; id++) {
 		webpage_t *page = pageload(id, "pages");
 		int pos = 0;
@@ -167,7 +180,8 @@ int main(int argc, char *argv[]) {
 			//free(word);
 		}
 	}
-	printf("%d\n", sumwords(index));
+	*/
+	//	printf("%d\n", sumwords(index));
 	happly(index, deleteIndex);
 	hclose(index);
 	exit(EXIT_SUCCESS);
@@ -181,7 +195,7 @@ int main(int argc, char *argv[]) {
  * Converts a word to lowercase
  *
  * Inputs: word - a string
- */
+ 
 void NormalizeWord(char *word) {
 
 	if (word != NULL) {
@@ -191,3 +205,4 @@ void NormalizeWord(char *word) {
 	}
 
 }
+*/

@@ -18,9 +18,6 @@
 #include <stdlib.h>
 
 
-/* Structs in ht */
-typedef struct hashIndex hashIndex_t;
-typedef struct wordPage wordPage_t;
 
 /* Saves an index! Happy Halloween! */
 int indexsave(hashtable_t *index, char *filename);

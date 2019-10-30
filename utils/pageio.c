@@ -40,13 +40,17 @@ int32_t pagesave(webpage_t *pagep, int id, char *dirname) {
   if ((save = fopen(filename, "w")) == NULL) {                                                        
     return 1;                                                                                     
   }                                                                                                   
-                                                                                                      
+
+	char *html = webpage_getHTML(pagep);
+
+	if (html != NULL) {
   // save with a unique id                                                                            
-  fprintf(save, "%s\n", webpage_getURL(pagep));                                                       
-  fprintf(save, "%d\n", webpage_getDepth(pagep));                                                     
-  fprintf(save, "%d\n", webpage_getHTMLlen(pagep));                                                   
-  fprintf(save, "%s", webpage_getHTML(pagep));                                                      
-                                                                                                      
+		fprintf(save, "%s\n", webpage_getURL(pagep));                                                       
+		fprintf(save, "%d\n", webpage_getDepth(pagep));                                                     
+		fprintf(save, "%d\n", webpage_getHTMLlen(pagep));                                                   
+		fprintf(save, "%s", html);
+		// this sucks
+	}
   fclose(save);                                                                                       
                                                                                                       
   return 0;
@@ -72,7 +76,7 @@ webpage_t *pageload(int id, char *dirname){
 	fscanf(file, "%s", URL);
 	
 	
-	int depth;
+	int depth =0;
 	fscanf(file, "%d", &depth);
 	
 	
@@ -81,11 +85,11 @@ webpage_t *pageload(int id, char *dirname){
 	// Now we need to scan the total html
 	int length;
 	fscanf(file, "%d\n", &length);
- 	char *html = (char *)malloc(sizeof(char *)*length);
+	//char *html = (char *)malloc(sizeof(char)*length);
+	char *html = (char *)calloc(length, sizeof(char)+1);
 	char *p = html;
 	//	strncat(html, "",1);
 	char ch;
-
 	while((ch = fgetc(file)) != EOF){
 		*p++ = ch;
 		//sprintf(html, "%s%c", html, ch); 
@@ -93,6 +97,9 @@ webpage_t *pageload(int id, char *dirname){
 	
 	//RemoveWhitespace(html);
 	fclose(file);
+	
+	
+	//	printf("%s\n", html);
 	webpage_t *result = webpage_new(URL, depth, html);
 	return result;
 }

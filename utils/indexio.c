@@ -23,8 +23,9 @@
 FILE *indexname;
 typedef struct hashIndex{
 	char *word;
-	queue_t *pages;                                                                                        } hashIndex_t;                                                                                                             
-                                                                                                         // MAKE A STRUCT THAT HOLDS A WEBPAGE and frequency of a word asssociated with that webpage
+	queue_t *pages;
+} hashIndex_t;                                                                                                             
+
 typedef struct wordPage{                                                                                                   
   int id; // webpage id                                                                                                    
   int frequency; // word frequency                                                                                         
@@ -98,15 +99,9 @@ hashtable_t *indexload(char *indexnm) {
 		int count;
 		while(fscanf(file, "%d %d", &id, &count) > 0){
 			wordPage_t *wordPage = makeWordPage(id, count);
-			qput((ht->pages), wordPage);
-			
+			qput((ht->pages), wordPage);		
 		}
 		hput(index, ht, (const char *)word, strlen(word));
-
 	}
-	// Fscanf to the first word
-	// add to the index with key of word a new
-	// then keep f scanning the integers, until we hit a new line
-	// THen scan to the next word and repeat
 	return index;
 }

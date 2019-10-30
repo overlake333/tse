@@ -12,7 +12,10 @@
 #include <indexio.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+
 int main(void){
 	hashtable_t *index = indexload("../indexer/valTest.txt");
 	indexsave(index, "testIO.txt");
+	
 }

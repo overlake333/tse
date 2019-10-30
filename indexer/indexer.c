@@ -131,9 +131,10 @@ int main(int argc, char *argv[]) {
 	
 	
 	//NEEDS TO CHECK IF DIR EXISTS
-	indexload(index, pagedir);
+	//	indexload(index, pagedir);
+
+
 	indexsave(index, indexnm);
-	
 	/*
 	for (int id = 1; id <= toId; id++) {
 		webpage_t *page = pageload(id, "pages");

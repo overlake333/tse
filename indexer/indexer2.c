@@ -75,9 +75,11 @@ static void deleteWordPage(void *wordPage){
 }
 
 static void deleteIndex(void *hashIndex){
-	queue_t *myQueue = ((hashIndex_t *)hashIndex)->pages;
+	hashIndex_t *hi = (hashIndex_t *)hashIndex;
+	queue_t *myQueue = hi->pages;
 	qapply(myQueue, deleteWordPage);
 	qclose(myQueue);
+	free(hi->word);
 	free(hashIndex);
 }
 
@@ -123,36 +125,38 @@ int main(int argc, char *argv[]) {
 	
 	
 	// Loads a webpage with pageio module
-	 int toId = atoi(argv[1]);
+	int toId = atoi(argv[1]);
+	
+	
 	//NEEDS TO CHECK IF DIR EXISTS
-	 hashtable_t *index = hopen(50);
+	 hashtable_t *index = hopen(1);
 	 for (int id = 1; id <= toId; id++) {
 		webpage_t *page = pageload(id, "pages");
 		int pos = 0;
-		char *word;
+		
 		char out[50];
 		sprintf(out, "out%d.txt", id);
 		FILE *output = fopen(out, "w"); // output file to write html to
 		
 		// Uses webpage_getNextWord to print all words in HTML. SKIPS TAGS! 		
 		
-		
+		char *word;
 		while ((pos = webpage_getNextWord(page, pos, &word)) > 0) {
 			//printf("%s\n", word);
 			NormalizeWord(word);
 			if (strlen(word) >= 3){
 				fprintf(output, "%s\n", word); // prints the words of the html to a file
 				// if word is not already in hash table
-				hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, sizeof(word)));
+				hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, strlen(word)));
 				if (hw == NULL){
 					// create a new hashIndex_t
 					hashIndex_t *ht = makeIndex(word, id);
 					// add it to hashtable
-					hput(index, ht, (const char *)word, sizeof(word));
+					hput(index, ht, (const char *)word, strlen(word));
 					
 				} else {
 					// update the frequency of the hashindex_t by 1
-					
+					free(word);
 					wordPage_t *wp = (wordPage_t *)(qsearch(hw->pages, qsearchfn, (const char *)&id));
 					if (wp == NULL) {
 						// create new wordPage - has a id and frequency!
@@ -167,9 +171,12 @@ int main(int argc, char *argv[]) {
 				}
 				
 				
+			} else {
+				free(word);
 			}
-			free(word);
+
 		}
+		
 		webpage_delete(page);
 		fclose(output);
 	 }

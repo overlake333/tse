@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 FILE *indexname;
 
@@ -69,6 +70,20 @@ static hashIndex_t *makeIndex(char *word, int id) {
 	return Hi;
 }
 
+static void deleteWordPage(void *wordPage){                                                                                             
+  free(wordPage);                                                                                                                       
+} 
+                                                                                                                                      
+static void deleteIndex(void *hashIndex){                                                                                               
+  hashIndex_t *hi = (hashIndex_t *)hashIndex;                                                                                           
+  queue_t *myQueue = hi->pages;                                                                                                         
+  qapply(myQueue, deleteWordPage);                                                                                                      
+  qclose(myQueue);                                                                                                                      
+  free(hi->word);                                                                                                                       
+  free(hashIndex);                                                                                                                      
+}         
+
+
 static bool searchfn(void *elementp, const void *searchkeyp) {
 	hashIndex_t *Hi = (hashIndex_t *)elementp;
 	if(strcmp(Hi->word, searchkeyp) == 0) {
@@ -93,11 +108,13 @@ static void NormalizeWord(char *word) {
 	}
 }
 
+
 /* Saves an index */
 int indexsave(hashtable_t *index, char *filename) {
 	indexname = fopen(filename, "w");
 	if (indexname != NULL) {
 		happly(index, savesht);
+		happly(index, deleteIndex);
 		fclose(indexname);
 		return 0;
 	}
@@ -119,15 +136,16 @@ int indexload(hashtable_t *index, char *dirname) {
 
 			NormalizeWord(word);
 			if (strlen(word) >= 3) {
-				hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, sizeof(word)));
+				hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, strlen(word)));
 				if (hw == NULL) {
 					// create new hashIndex_t
 					hashIndex_t *ht = makeIndex(word,id);
 					// add it to table
-					hput(index, ht, (const char *)word, sizeof(word));
+					hput(index, ht, (const char *)word, strlen(word));
 
 				} else {
 					//update frequency of hashIndex_t by 1
+					free(word);
 					wordPage_t *wp = (wordPage_t *)(qsearch(hw->pages, qsearchfn, (const char *)&id));
 					if(wp == NULL) {
 						// create new wordPage - id and frequency
@@ -139,8 +157,11 @@ int indexload(hashtable_t *index, char *dirname) {
 						wp ->frequency = wp->frequency + 1;
 					}
 				}
-			}
+			} else {
+				free(word);
+			}		
 		}
+		webpage_delete(page);
 		id++;
 	}
 	return 0;			

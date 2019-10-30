@@ -122,31 +122,27 @@ static int sumwords(hashtable_t *ht){
 
 // Main
 int main(int argc, char *argv[]) {
+
+	char *usage = "usage: indexer <pagedir> <indexnm>";
+	if (argc != 3) {
+		printf("%s\n", usage);
+		exit(EXIT_FAILURE);
+	}
+	char *pagedir = argv[1];
+	char *indexnm = argv[2];
+	hashtable_t *index = hopen(50);
 	
 	
-	// Loads a webpage with pageio module
-	int toId = atoi(argv[1]);
+	int id =1;
+	webpage_t *page;
 	
-	
-	//NEEDS TO CHECK IF DIR EXISTS
-	 hashtable_t *index = hopen(1);
-	 for (int id = 1; id <= toId; id++) {
-		webpage_t *page = pageload(id, "pages");
+	while((page = pageload(id, dirname)) != NULL) {
 		int pos = 0;
-		
-		char out[50];
-		sprintf(out, "out%d.txt", id);
-		FILE *output = fopen(out, "w"); // output file to write html to
-		
-		// Uses webpage_getNextWord to print all words in HTML. SKIPS TAGS! 		
-		
 		char *word;
+		
 		while ((pos = webpage_getNextWord(page, pos, &word)) > 0) {
-			//printf("%s\n", word);
 			NormalizeWord(word);
 			if (strlen(word) >= 3){
-				fprintf(output, "%s\n", word); // prints the words of the html to a file
-				// if word is not already in hash table
 				hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, strlen(word)));
 				if (hw == NULL){
 					// create a new hashIndex_t
@@ -166,22 +162,16 @@ int main(int argc, char *argv[]) {
 					} else {
 						// Update a wordPage's frequency by 1
 						wp->frequency = wp->frequency +1;
-					}
-					
+					}					
 				}
-				
-				
 			} else {
 				free(word);
 			}
-
 		}
-		
 		webpage_delete(page);
-		fclose(output);
+		id++;
 	 }
-	
-	printf("%d\n", sumwords(index));
+	indexsave(index, indexnm);
 	happly(index, deleteIndex);
 	hclose(index);
 	exit(EXIT_SUCCESS);

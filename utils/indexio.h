@@ -23,4 +23,4 @@
 int indexsave(hashtable_t *index, char *filename);
 
 /* Loads an index! Load! Load! Load! */
-int indexload(hashtable_t *index, char *dirname);
+hashtable_t *indexload(char *indexnm);

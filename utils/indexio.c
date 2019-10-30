@@ -114,55 +114,23 @@ int indexsave(hashtable_t *index, char *filename) {
 	indexname = fopen(filename, "w");
 	if (indexname != NULL) {
 		happly(index, savesht);
-		happly(index, deleteIndex);
 		fclose(indexname);
 		return 0;
 	}
 	return 1;
 }
 
-/* Loads an index */
-int indexload(hashtable_t *index, char *dirname) {
-	int id = 1;
-	//char crawlerFile[50];
-	//sprintf(crawlerFile, "../%s/%d", dirname, id);
-	webpage_t *page;
-	
-	while((page = pageload(id, dirname)) != NULL) {
-		int pos = 0;
-		char *word;
-
-		while ((pos = webpage_getNextWord(page, pos, &word)) >0) {
-
-			NormalizeWord(word);
-			if (strlen(word) >= 3) {
-				hashIndex_t *hw = (hashIndex_t *)(hsearch(index, searchfn, (const char *)word, strlen(word)));
-				if (hw == NULL) {
-					// create new hashIndex_t
-					hashIndex_t *ht = makeIndex(word,id);
-					// add it to table
-					hput(index, ht, (const char *)word, strlen(word));
-
-				} else {
-					//update frequency of hashIndex_t by 1
-					free(word);
-					wordPage_t *wp = (wordPage_t *)(qsearch(hw->pages, qsearchfn, (const char *)&id));
-					if(wp == NULL) {
-						// create new wordPage - id and frequency
-						wordPage_t *newPage = makeWordPage(id);
-						// add it to queue of the word
-						qput(hw->pages, (void *)newPage);
-					} else {
-						//update frequency by 1
-						wp ->frequency = wp->frequency + 1;
-					}
-				}
-			} else {
-				free(word);
-			}		
-		}
-		webpage_delete(page);
-		id++;
+/* Loads an index from an index file*/
+hashtable_t *indexload(char *indexnm) {
+	FILE *file = fopen(indexnm, "r");
+	if (file == NULL){
+		return NULL;
 	}
-	return 0;			
+	hashtable_t *index = hopen(50);
+ 
+	// Fscanf to the first word
+	// add to the index with key of word a new
+	// then keep f scanning the integers, until we hit a new line
+	// THen scan to the next word and repeat
+	
 }

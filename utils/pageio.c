@@ -73,14 +73,11 @@ webpage_t *pageload(int id, char *dirname){
 	
 	
 	char URL[100];
-	fscanf(file, "%s", URL);
-	
-	
+	fscanf(file, "%s", URL);		
 	int depth =0;
 	fscanf(file, "%d", &depth);
-	
-	
 	// First line is URL
+	
 	// Second is depth
 	// Now we need to scan the total html
 	int length;

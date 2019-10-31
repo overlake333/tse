@@ -33,7 +33,7 @@ typedef struct wordPage{
 
 
 
-hashIndex_t *makeIndex(char *word){
+static hashIndex_t *makeIndex(char *word){
   hashIndex_t *Hi;
   if (!(Hi = (hashIndex_t *)malloc(sizeof(hashIndex_t)))){
     return NULL;
@@ -44,7 +44,7 @@ hashIndex_t *makeIndex(char *word){
 	return Hi;
 }
 
-wordPage_t *makeWordPage(int id, int count) {
+static wordPage_t *makeWordPage(int id, int count) {
   wordPage_t *page;
   if (!(page = (wordPage_t *)malloc(sizeof(wordPage_t)))){
     return NULL;
@@ -105,3 +105,4 @@ hashtable_t *indexload(char *indexnm) {
 	}
 	return index;
 }
+

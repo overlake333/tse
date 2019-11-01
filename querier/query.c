@@ -29,7 +29,7 @@ static int readline(char **string){
 		}
 	while(ch != '\n'){
 		if (isalpha(ch) || isspace(ch)){
-			*p++ = ch;
+			*p++ = tolower(ch);
 			scanf("%c", &ch);
 		}else{
 			while (getchar() != '\n');
@@ -47,18 +47,25 @@ int main(void){
 	
 	printf("> ");
 	char *line;
-	//char array[50][100];
+	char array[50][100];
 	int value;
-	//int i = 0;
 	while ((value = readline(&line)) != -1){
+		int i = 0;
 		if (value == 1){
-			printf("%s\n", line);
-			//char *token = strtok(line, " ");
+			//printf("%s\n", line);
+			char *token = strtok(line, " ");
 			
-			//while (token != NULL) {
-			//array[i] = token;
-			//i++;
-			//	}
+			while (token != NULL) {
+				strcpy(array[i], token);
+				token = strtok(NULL, " ");
+				i++;
+		 	}
+			int j = 0;
+			while (j < i) {
+				printf("%s ", array[j]);
+				j++;
+			}
+			printf("\n");
 			
 
 		}
@@ -71,6 +78,11 @@ int main(void){
 		printf("> ");
 		free(line);
 	}
+
+	
+
+
+	
 	
 	free(line);	
 	return 0;

@@ -91,10 +91,11 @@ hashtable_t *indexload(char *indexnm) {
 	hashtable_t *index = hopen(50);
 	char word[50];
 	while(fscanf(file, "%s", word) != EOF){
-		char *wordd = (char *)malloc(strlen(word)*sizeof(char));
+		char *wordd = (char *)malloc(strlen(word)+1);
+		//char *wordd = (char *)calloc(strlen(word), 2);
 		strcpy(wordd, word);
 		hashIndex_t *ht = makeIndex(wordd);
-		printf("%s\n", ht->word);
+		//printf("%s\n", ht->word);
 		int id;
 		int count;
 		while(fscanf(file, "%d %d", &id, &count) > 0){
@@ -103,6 +104,7 @@ hashtable_t *indexload(char *indexnm) {
 		}
 		hput(index, ht, (const char *)word, strlen(word));
 	}
+	fclose(file);
 	return index;
 }
 

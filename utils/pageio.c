@@ -82,8 +82,8 @@ webpage_t *pageload(int id, char *dirname){
 	// Now we need to scan the total html
 	int length;
 	fscanf(file, "%d\n", &length);
-	char*html = (char *)malloc(length+1);             ;
-	//char *html = (char *)calloc(length, 2);
+	//char*html = (char *)malloc(length+1);             ;
+	char *html = (char *)calloc(length+1, 1);
 	char *p = html;
 	//	strncat(html, "",1);
 	char ch;

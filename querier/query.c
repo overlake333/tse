@@ -141,115 +141,200 @@ static int readline(char **string){
 	return 1;
 }
 
+static bool querysearchfn(void *elementp, const void *keyp){
+	queryPage_t *myQueryPage = (queryPage_t *)elementp;
+	if (myQueryPage->id == *((int *)keyp)) {
+		return true;
+	}
+	return false;
+}
+
+
+hashtable_t *index;
+queue_t *queryList;
+
+static void parseQuery(char *line){
+	printf("running parseQuery on %s\n", line);
+	char array[50][100];
+	
+	int i = 0;
+	char *token = strtok(line, " ");
+	while (token != NULL) {
+		//printf("%s ", token);
+		strcpy(array[i], token);
+		token = strtok(NULL, " ");
+		i++;
+	}
+	//printf("\n");
+	// j is used to loop through i number of strings in a query
+	// check to see if queried word is in index
+	int id = 1;
+	webpage_t *myPage;
+	
+	
+	//myPage = pageload(id, "pages");
+	//if (myPage == NULL){
+	//printf("did not get the page!");
+	//}
+	
+	while((myPage = pageload(id, "pages")) !=NULL){
+		
+		int j = 0;
+		int min = 0;
+		
+		while (j < i) {
+			// make sure we don't include reserved words in query
+			if (strcmp(array[j], "and") != 0) {
+				
+				hashIndex_t *hi = (hashIndex_t *)(hsearch(index, searchfn, (const char *)array[j], strlen(array[j])));			
+				if (hi != NULL) {
+					
+					queue_t *documents = hi->pages;
+					// check to see if word has a frequency for given page id
+					
+					wordPage_t *mywp = (wordPage_t *)(qsearch(documents, qsearchfn, (const char *)&id));
+					if (mywp != NULL) {
+						// if it does, grab that frequency
+						int frequency = mywp->frequency;
+						
+						// determine what word in the query has the minimum rank and keep track of it
+						if (j == 0) {
+							min = frequency;
+						} else if (frequency < min) {
+							min = frequency;
+									}
+						// prints the output: word and frequency and then rank at end for query
+						
+					} else {
+						// In case query has a word not in the page we are looking at
+						min = 0;
+					}
+				} else {
+					// In case a word in the query is not in the index
+					min = 0;
+				}
+			}
+			j++;
+			
+			if (min == 0){
+				break;
+			}
+			
+		}
+		//ranksum += min;
+		if(min != 0){
+			queryPage_t *myQueryPage = (queryPage_t *)qsearch(queryList, querysearchfn, (const void *)&id);
+			if (myQueryPage == NULL) {
+				myQueryPage = makeQueryPage(id, min, myPage);
+				qput(queryList, (void *)myQueryPage);
+			} else {
+				myQueryPage->rank += min;
+			}
+		}else{
+			webpage_delete(myPage);
+		}
+		id++;
+	}
+	
+	
+}
+
+
 
 int main(void){
 
-	
-	
-	
 	// print the first carrot
 	printf("> ");
 	char *line;
 	// holds an array of strings. This is the query given by the user split word by word
-	char array[50][100];
-
 	// Return value of readline
 	int value;
 	
-	hashtable_t *index = indexload("../indexer/valTest.txt");
+	index = indexload("../indexer/valTest.txt");
 	
 	// read until we get to end o fo a 
 	while ((value = readline(&line)) != -1){
 		// reset i each loop, keeps track of number of strings in a query
-		int i = 0;
+	
 		// if we got a successful query
 		if (value == 1){
-			// splt the query word by word with strtok
-			char *token = strtok(line, " ");
-			while (token != NULL) {
-				printf("%s ", token);
-				strcpy(array[i], token);
-				token = strtok(NULL, " ");
-				i++;
-		 	}
-			printf("\n");
-			// j is used to loop through i number of strings in a query
-								// check to see if queried word is in index
-			int id = 1;
-			webpage_t *myPage;
-			
-		 
-		  //myPage = pageload(id, "pages");
-			//if (myPage == NULL){
-			//printf("did not get the page!");
-			//}
-			queue_t *queryList;
 			queryList = qopen();
-			while((myPage = pageload(id, "pages")) !=NULL){
-			 	
-				int j = 0;
-				int min = 0;
-				
-				while (j < i) {
-					// make sure we don't include reserved words in query
-					if (strcmp(array[j], "and") != 0 && strcmp(array[j], "or") != 0) {
-						
-						hashIndex_t *hi = (hashIndex_t *)(hsearch(index, searchfn, (const char *)array[j], strlen(array[j])));			
-						if (hi != NULL) {
-							
-							queue_t *documents = hi->pages;
-							// check to see if word has a frequency for given page id
-							
-							wordPage_t *mywp = (wordPage_t *)(qsearch(documents, qsearchfn, (const char *)&id));
-							if (mywp != NULL) {
-								// if it does, grab that frequency
-								int frequency = mywp->frequency;
-								
-								// determine what word in the query has the minimum rank and keep track of it
-								if (j == 0) {
-									min = frequency;
-								} else if (frequency < min) {
-									min = frequency;
-								}
-								// prints the output: word and frequency and then rank at end for query
-								
-							} else {
-								// In case query has a word not in the page we are looking at
-								min = 0;
-							}
-						} else {
-							// In case a word in the query is not in the index
-							min = 0;
-						}
-					}
-					j++;
-					
-					if (min == 0){
+ 
+			int len = 0;
+			//Split by " or "
+			char *token = strtok(line, " ");
+			char tstring[50];
+			char array[20][50];
+			bool didBreak = false;
+			bool prevSpecial = false;
+			// Replace or with a comma and check validity of queue
+			while (token != NULL) {
+				if (len == 0 || prevSpecial == true){
+					if (strcmp(token, "or") == 0 || strcmp(token, "and") == 0){
+						value = 2;
+						didBreak = true;
 						break;
 					}
-					
 				}
-				if(min != 0){
-					queryPage_t *myQueryPage = makeQueryPage(id, min, myPage);
-					qput(queryList, myQueryPage);
+				if (strcmp(token, "or") != 0) {
+					if (strcmp(token, "and") ==0){
+						prevSpecial = true;
+					}else{
+						prevSpecial = false;
+					}
+					if (len != 0) {
+						sprintf(tstring, "%s %s", tstring, token);
+						len+= strlen(token)+1;
+					} else {
+						sprintf(tstring, "%s", token);
+						len = strlen(token);
+					}
+				} else {
 					
-				}else{
-					webpage_delete(myPage);
+					sprintf(tstring, "%s .", tstring);
+					prevSpecial = true;
 				}
-				id++;
+				
+				token = strtok(NULL, " ");	
+				if (token ==NULL){
+					if(prevSpecial == true){
+						value = 2;
+						didBreak = true;
+						break;
+					}
+				}
 			}
-			printf("\n");
+			int i = 0;
+			
+			char *tkn = strtok(tstring, ".");
+			if (didBreak == false){
+			while (tkn != NULL){
+				
+				
+				strcpy(array[i], tkn);  
+				
+				tkn = strtok(NULL, ".");
+				
+				i++;
+			}
+			int j = 0;
+			while (j< i){
+				
+				printf("about to run parseQuery on: %s\n", array[j]);
+				parseQuery(array[j]);
+				j++;
+			}
 			qapply(queryList, applyfn);
 			qapply(queryList, deleteQueryPage);
 			qclose(queryList);
-
 			
 		}
-	
+		}
 		if (value == 2){
 			printf("[invalid query]\n");
 		}
 		value = 0;
+		
 		printf("> ");
 		free(line);
 		
@@ -261,3 +346,5 @@ int main(void){
 	hclose(index);	
  	return 0;
 }
+
+

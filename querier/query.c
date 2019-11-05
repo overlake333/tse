@@ -50,11 +50,12 @@ static queryPage_t *makeQueryPage(int id, int rank, webpage_t *page){
 	return myQueryPage;
 }
 
+FILE *qOutput;
 //queueApply function to be applied onto the queue associated to a word
 // this queue is full of wordPages so this function should take in a wordpage
 static void applyfn(void *queryPage){
 	queryPage_t *myqp = (queryPage_t *)queryPage;
-	printf("rank: %d: doc: %d: %s\n", myqp->rank, myqp->id, webpage_getURL((const webpage_t *)(myqp->page)));	
+	fprintf(qOutput,"rank: %d: doc: %d: %s\n", myqp->rank, myqp->id, webpage_getURL((const webpage_t *)(myqp->page)));	
 }
 // FUnctions to help with memory leaks
 
@@ -102,15 +103,15 @@ static bool qsearchfn(void *elementp, const void *searchkeyp) {
 
 
 
-static int readline(char **string){
+static int readline(char **string, FILE* qInput){
 	// given a pointer to a pointer of a string
 	// allocate memory for the data pointed to by string
 	*string = (char *)malloc(100);
 	char *p = *string;
 	char ch;
-
+	int i = 0;
 	// scans the first character to make sure we are not reading the end of the file
-	if (scanf("%c", &ch)==EOF){
+	if (fscanf(qInput,"%c", &ch)==EOF){
 		return -1;
 		// end of file return -1
 	}
@@ -126,16 +127,24 @@ static int readline(char **string){
 		if (isalpha(ch) || isspace(ch)){
 			// add the lowercase letter to the string
 			*p++ = tolower(ch);
+			i++;
+			if (i > 95) {
+				return 2;
+			}
 			// scan the next character
-			scanf("%c", &ch);
+			fscanf(qInput,"%c", &ch);
 		}else{
 			// if we got a number or punctiation return 2 but make sure we get to the end of the query entry first
-			while (getchar() != '\n');
-			return 2;
+			while (fscanf(qInput, "%c", &ch)) {
+				if (ch == '\n') {
+					return 2;
+				}
+			}
 		}
 	}
 	// Always add a terminating character to the string~
 	*p = '\0';
+	
 	// successful creation of string return 1
 
 	return 1;
@@ -153,7 +162,7 @@ static bool querysearchfn(void *elementp, const void *keyp){
 hashtable_t *index;
 queue_t *queryList;
 
-static void parseQuery(char *line){
+static void parseQuery(char *line, char *pagedir){
 	printf("running parseQuery on %s\n", line);
 	char array[50][100];
 	
@@ -177,8 +186,7 @@ static void parseQuery(char *line){
 	//printf("did not get the page!");
 	//}
 	
-	while((myPage = pageload(id, "pages")) !=NULL){
-		
+	while((myPage = pageload(id, pagedir)) !=NULL){
 		int j = 0;
 		int min = 0;
 		
@@ -229,6 +237,7 @@ static void parseQuery(char *line){
 				qput(queryList, (void *)myQueryPage);
 			} else {
 				myQueryPage->rank += min;
+				webpage_delete(myPage);
 			}
 		}else{
 			webpage_delete(myPage);
@@ -241,7 +250,36 @@ static void parseQuery(char *line){
 
 
 
-int main(void){
+int main(int argc, char *argv[]){
+
+	// usage statement
+	char *usage = "usage: query <pageDirectory> <indexFile> [-q]";
+
+	char *pagedir;
+	char *indexnm;
+	FILE *qInput;
+	
+	if (argc == 3 || argc == 6) {
+		pagedir = argv[1];
+		indexnm = argv[2];
+		if (argc == 6) {
+			if (strcmp(argv[3], "-q") == 0) {
+				qInput = fopen(argv[4], "r");
+				qOutput = fopen(argv[5], "w");
+			} else {
+				printf("%s\n", usage);
+				exit(EXIT_FAILURE);
+			}
+		} else if (argc == 3) {
+			qInput = stdin;
+			qOutput = stdout;
+		} 
+	} else {
+		printf("%s\n", usage);
+		exit(EXIT_FAILURE);
+	}
+
+	
 
 	// print the first carrot
 	printf("> ");
@@ -249,11 +287,13 @@ int main(void){
 	// holds an array of strings. This is the query given by the user split word by word
 	// Return value of readline
 	int value;
-	
-	index = indexload("../indexer/valTest.txt");
+
+	char indexFile[50];
+	sprintf(indexFile, "../indexer/%s", indexnm);
+	index = indexload(indexFile);
 	
 	// read until we get to end o fo a 
-	while ((value = readline(&line)) != -1){
+	while ((value = readline(&line, qInput)) != -1){
 		// reset i each loop, keeps track of number of strings in a query
 	
 		// if we got a successful query
@@ -263,8 +303,8 @@ int main(void){
 			int len = 0;
 			//Split by " or "
 			char *token = strtok(line, " ");
-			char tstring[50];
-			char array[20][50];
+			char tstring[100];
+			char array[20][100];
 			bool didBreak = false;
 			bool prevSpecial = false;
 			// Replace or with a comma and check validity of queue
@@ -308,27 +348,27 @@ int main(void){
 			
 			char *tkn = strtok(tstring, ".");
 			if (didBreak == false){
-			while (tkn != NULL){
+				while (tkn != NULL){
+					
+					
+					strcpy(array[i], tkn);  
+					
+					tkn = strtok(NULL, ".");
+					
+					i++;
+				}
+				int j = 0;
+				while (j< i){
+					
+					printf("about to run parseQuery on: %s\n", array[j]);
+					parseQuery(array[j], pagedir);
+					j++;
+				}
+				qapply(queryList, applyfn);
+				qapply(queryList, deleteQueryPage);
+				qclose(queryList);
 				
-				
-				strcpy(array[i], tkn);  
-				
-				tkn = strtok(NULL, ".");
-				
-				i++;
 			}
-			int j = 0;
-			while (j< i){
-				
-				printf("about to run parseQuery on: %s\n", array[j]);
-				parseQuery(array[j]);
-				j++;
-			}
-			qapply(queryList, applyfn);
-			qapply(queryList, deleteQueryPage);
-			qclose(queryList);
-			
-		}
 		}
 		if (value == 2){
 			printf("[invalid query]\n");
@@ -343,7 +383,9 @@ int main(void){
 	// memory grinding ;)
 	free(line);		
 	happly(index, deleteIndex);	
-	hclose(index);	
+	hclose(index);
+	fclose(qInput);
+	fclose(qOutput);
  	return 0;
 }
 

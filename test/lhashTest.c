@@ -58,53 +58,29 @@ void *printafter(void *print){
 */
 
 void applyfn(void *element){
-	printf("%lf", *(double *)element);
+	printf("%lf\n", *(double *)element);
 }
 
 int main(void){
 	pthread_t pt1, pt2;// pt3, pt4;
 	lhashtable_t *lht = lhopen(10);
-	
-		
-	if(pthread_create(&pt1,NULL, putinHash, (void *)lht)!= 0){
-		printf("DID NOT OPEN");
-		exit(EXIT_FAILURE);
-		
+
+	pthread_t array[3];
+	for (int i = 0; i < 3; i++) {
+		if(pthread_create(&array[i],NULL, putinHash, (void *)lht)!= 0){
+			printf("DID NOT OPEN");
+			exit(EXIT_FAILURE);			
+		}
 	}
-	
-	if(pthread_create(&pt2, NULL, putinHash2, (void*)lht)!=0){
-		printf("DID not open 2nd");
-		exit(EXIT_FAILURE);
+
+	for (int i = 0; i < 3; i++) {
+		if(pthread_join(array[i], NULL)!=0){
+			printf("DID NOT COME BACK");
+			exit(EXIT_FAILURE);
+		}
 	}
-	/*
-	if(pthread_create(&pt3,NULL, printit, (void *)myLq)!= 0){
-		printf("DID NOT OPEN");
-		exit(EXIT_FAILURE);
-		
-	}
-	if(pthread_create(&pt4, NULL, printafter, (void*) myLq)!=0){
-		printf("DID not open 2nd");
-		exit(EXIT_FAILURE);
-	}
-	*/
-	if(pthread_join(pt1, NULL)!=0){
-		printf("DID NOT COME BACK");
-		exit(EXIT_FAILURE);
-	}
-	
-	if(pthread_join(pt2, NULL)!=0){
-		printf("2 didnot comeback");
-		exit(EXIT_FAILURE);
-	}
-	/*
-	if(pthread_join(pt3, NULL)!=0){
-		printf("thread 3DID NOT COME BACK");
-		exit(EXIT_FAILURE);
-	}
-	if(pthread_join(pt4, NULL)!=0){
-		printf("2 didnot comeback");
-		exit(EXIT_FAILURE);
-		}*/
+				
+ 
 	printf("ALL GOOD\n");
 	lhapply(lht, applyfn);
 

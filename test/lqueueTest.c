@@ -17,7 +17,7 @@
 static int x = 5;
 static int y = 27;
 
-pthread_mutex_t m;
+static pthread_mutex_t m;
 
 
 void *putinQueue( void *q){
@@ -49,13 +49,13 @@ void *printafter(void *print){
 	print = NULL;
 	pthread_mutex_unlock(&m);
 	return print;
-}
+	}
 void applyfn(void *element){
 	printf("%d\n", *(int *)element);
 }
 
 int main(void){
-	pthread_t pt1, pt2, pt3, pt4;
+	pthread_t pt1, pt2;// pt3, pt4;
 	lqueue_t *myLq = lqopen();
 	
 	
@@ -68,6 +68,7 @@ int main(void){
 		printf("DID not open 2nd");
 		exit(EXIT_FAILURE);
 	}
+	/*
 	if(pthread_create(&pt3,NULL, printit, (void *)myLq)!= 0){
 		printf("DID NOT OPEN");
 		exit(EXIT_FAILURE);
@@ -76,7 +77,7 @@ int main(void){
 	if(pthread_create(&pt4, NULL, printafter, (void*) myLq)!=0){
 		printf("DID not open 2nd");
 		exit(EXIT_FAILURE);
-	}
+		}*/
 	if(pthread_join(pt1, NULL)!=0){
 		printf("DID NOT COME BACK");
 		exit(EXIT_FAILURE);
@@ -84,7 +85,7 @@ int main(void){
 	if(pthread_join(pt2, NULL)!=0){
 		printf("2 didnot comeback");
 		exit(EXIT_FAILURE);
-	}
+	}/*
 	if(pthread_join(pt3, NULL)!=0){
 		printf("thread 3DID NOT COME BACK");
 		exit(EXIT_FAILURE);
@@ -92,7 +93,7 @@ int main(void){
 	if(pthread_join(pt4, NULL)!=0){
 		printf("2 didnot comeback");
 		exit(EXIT_FAILURE);
-	}
+		}*/
 	printf("ALL GOOD\n");
 	lqapply(myLq, applyfn);
 

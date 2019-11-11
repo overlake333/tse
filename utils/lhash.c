@@ -1,51 +1,64 @@
-
-/* 
- * queue.h -- public interface to the queue module
- */
 #include <stdint.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <lhash.h>
 #include <hash.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-pthread_mutex_t m;
+typedef struct myLht{
+	pthread_mutex_t m;
+	hashtable_t *h;
+} myLht_t;
+
+
+static myLht_t *makeLht(uint32_t hsize){
+	myLht_t *lht;
+	if (!(lht = (myLht_t*)malloc(sizeof(myLht_t)))){
+		printf("error creating lht");
+		return NULL;
+	}
+	pthread_mutex_init(&(lht->m), NULL);
+	lht->h = hopen(hsize);
+	return lht;
+}
 
 /* the queue representation is hidden from users of the module */
 
 
 /* create an empty queue */
 lhashtable_t *lhopen(uint32_t hsize){
-	pthread_mutex_init(&m, NULL);
 	// maybe need to lock here?
-	lhashtable_t *h = hopen(hsize);
-	return h;
+	lhashtable_t *lht = (lhashtable_t *)makeLht(hsize);
+	return lht;
 }
 
 /* deallocate a queue, frees everything in it */
 void lhclose(lhashtable_t *ht){
-	hashtable_t *h = (hashtable_t *)ht;
-	hclose(h);
-	pthread_mutex_destroy(&m);
+	myLht_t *lht = (myLht_t *)ht;
+	hclose(lht->h);
+	pthread_mutex_destroy(&(lht->m));
+	free(lht);
 }
 
 /* put element at the end of the queue
  * returns 0 is successful; nonzero otherwise 
  */
 int32_t lhput(lhashtable_t *htp, void *ep, const char *key, int keylen){
-	pthread_mutex_lock(&m);
-	hashtable_t *ht = (hashtable_t *)htp;
-	uint32_t happiness = hput(ht, ep, key, keylen);
-	pthread_mutex_unlock(&m);
+	myLht_t *lht = (myLht_t *)htp;
+	pthread_mutex_lock(&(lht->m));
+	uint32_t happiness = hput(lht->h, ep, key, keylen);
+	pthread_mutex_unlock(&(lht->m));
 	return happiness;
 }
 
 
 /* apply a function to every element of the queue */
 void lhapply(lhashtable_t *htp, void (*fn)(void* elementp)){
-	pthread_mutex_lock(&m);
-	hashtable_t *ht = (hashtable_t *)htp;
-	happly(ht, fn);
-	pthread_mutex_unlock(&m);
+	myLht_t *lht = (myLht_t *)htp;
+	pthread_mutex_lock(&(lht->m));
+	happly(lht->h, fn);
+	pthread_mutex_unlock(&(lht->m));
 }
 
 /* search a queue using a supplied boolean function
@@ -57,13 +70,13 @@ void lhapply(lhashtable_t *htp, void (*fn)(void* elementp)){
  *          -- returns TRUE or FALSE as defined in bool.h
  * returns a pointer to an element, or NULL if not found
  */
-void* lqsearch(lhashtable_t *htp, 
+void* lhsearch(lhashtable_t *htp, 
 							bool (*searchfn)(void* elementp,const void* searchkeyp),
 							 const char* key, int32_t keylen){
-	pthread_mutex_lock(&m);
-	hashtable_t *ht = (hashtable_t *)htp;
-	void *love = hsearch(ht, searchfn, key, keylen);
-	pthread_mutex_unlock(&m);
+	myLht_t *lht = (myLht_t *)htp;
+	pthread_mutex_lock(&(lht->m));
+	void *love = hsearch(lht->h, searchfn, key, keylen);
+	pthread_mutex_unlock(&(lht->m));
 	return love;
 }
 

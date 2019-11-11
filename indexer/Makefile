@@ -1,11 +1,14 @@
 CFLAGS=-Wall -pedantic -std=c11 -I../utils -L../lib -g
 LIBS=-lutils -lcurl
 
-all: clean indexer
+all: clean indexer pindexer
 
 
 indexer:
 	gcc $(CFLAGS) indexer.c $(LIBS) -o $@
+
+pindexer:
+	gcc $(CFLAGS) pindexer.c $(LIBS) -o $@
 
 indexer3:
 	gcc $(CFLAGS) indexer3.c $(LIBS) -o $@
@@ -18,4 +21,4 @@ run:
 grind:
 
 clean:
-	rm -f indexer indexer3 indexer4
+	rm -f indexer indexer3 indexer4 pindexer
